@@ -23,8 +23,8 @@ import merrimackutil.json.types.*;
 
 public class sinkhole {
 
-
     ///need to use datagram socket 
+    ///for testing 
   public static void main(String[] args) throws FileNotFoundException, IOException {
         String configFilePath = "src/Sinkhole/config.json";
         File configFile = new File(configFilePath);
@@ -37,13 +37,23 @@ public class sinkhole {
             }
           }
           JSONObject configJsonObject = JsonIO.readObject(configFile);
-
-          @SuppressWarnings("deprecation")
           String dns_address = configJsonObject.get("dns-address").toString();
           String sinkhole_port = configJsonObject.get("sinkhole-port").toString();
-          String block_file = configJsonObject.get("block-file").toString();
-
-          
+          String block_file_path = configJsonObject.get("block-file").toString();
+          String block_file_location="src/Sinkhole/"+block_file_path;
+          File blockfile = new File(block_file_location);
+          try (
+              BufferedReader br = new BufferedReader(new FileReader(block_file_location))
+            ) {
+              String line;
+              while ((line = br.readLine()) != null) {
+                System.out.println(line);
+              }
+            }
+            JSONObject blockJsonObject = JsonIO.readObject(blockfile);
+            JSONArray blocked_JsonArray=(JSONArray)blockJsonObject.get("records");
+            System.out.println(blocked_JsonArray);
+        
 
 
   }
