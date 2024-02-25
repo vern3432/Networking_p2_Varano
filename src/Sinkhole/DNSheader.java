@@ -8,6 +8,7 @@ public class DNSheader{
     private final short answerCount;
     private final short authorityCount;
     private final short additionalCount;
+    public static final int HEADER_LENGTH = 12;
 
     //Private Constructor to enforce object creation through builder
     private DNSheader(short identifier, short flags, short questionCount, short answerCount, short authorityCount, short additionalCount) {
