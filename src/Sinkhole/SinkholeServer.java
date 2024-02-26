@@ -115,7 +115,7 @@ public class SinkholeServer {
                     String query = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.US_ASCII);
                 String domain = extractDomainFromQuery(packet);
                 String[] parts = query.split("\\s+"); // Split by whitespace
-                if (blockList.isBlocked(domain)) {
+                if (blockList.isBlocked(domain,getQueryTypeFromPacket(packet))) {
                     // If domain is in blocklist, respond with the sinkhole address
                     byte[] response = ("Sinkholed: " + domain).getBytes();
                     DatagramPacket responsePacket = new DatagramPacket(response, response.length, packet.getAddress(), packet.getPort());
