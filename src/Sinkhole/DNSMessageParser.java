@@ -1,7 +1,5 @@
 package Sinkhole;
 
-
-
 public class DNSMessageParser {
     private final byte[] data;
 
@@ -10,10 +8,51 @@ public class DNSMessageParser {
     }
 
     public String extractHostname() {
-        int headerLength = 12; // dns header length
+        int headerLength = 12; // DNS header length
         int questionSectionStart = findQuestionSectionStart(headerLength);
         return decodeDomainName(questionSectionStart);
     }
+
+
+    private int getDomainNameLength(int offset) {
+        int length = 0;
+        int index = offset;
+        int labelLength;
+        while ((labelLength = data[index]) != 0) {
+            if ((labelLength & 0xC0) == 0xC0) {
+                // Pointer to compressed label
+                index = ((labelLength & 0x3F) << 8) | (data[index + 1] & 0xFF);
+                continue;
+            }
+            // Add label length and the length byte itself
+            length += labelLength + 1;
+            index += labelLength + 1;
+        }
+        // Add 1 for the null terminator
+        return length + 1;
+    }
+
+    public String extractQueryType() {
+        int headerLength = 12; // DNS header length
+        int questionSectionStart = findQuestionSectionStart(headerLength);
+        int queryTypeOffset = questionSectionStart + getDomainNameLength(questionSectionStart) + 4; // Offset of 4 bytes for Query Type field
+        int queryType = (data[queryTypeOffset] << 8) | (data[queryTypeOffset + 1] & 0xFF);
+    
+        // Check if the query type is for an IPv4 address (A) or IPv6 address (AAAA)
+        if (queryType == 1) {
+            // Query type is for an IPv4 address (A)
+            return "A";
+        } else if (queryType == 28) {
+            // Query type is for an IPv6 address (AAAA)
+            return "AAAA";
+        } else {
+            // Unknown query type
+            return "Unknown";
+        }
+    }
+    
+    
+    
 
     private int findQuestionSectionStart(int headerLength) {
         int index = headerLength;
@@ -27,7 +66,7 @@ public class DNSMessageParser {
             index += labelLength + 1;
             remainingLength -= labelLength + 1;
         }
-        return index + 1; // Skip the null byte
+        return index + 5; // Skip the null byte and move to the type and class
     }
 
     private String decodeDomainName(int offset) {
@@ -50,6 +89,22 @@ public class DNSMessageParser {
         return domainNameBuilder.toString();
     }
 
+    private int decodeDomainNameLength(int offset) {
+        int index = offset;
+        int labelLength;
+        int length = 0;
+        while ((labelLength = data[index]) != 0) {
+            if ((labelLength & 0xC0) == 0xC0) {
+                // compressed label pointer
+                index = (data[index] & 0x3F) << 8 | (data[index + 1] & 0xFF);
+                continue;
+            }
+            length += labelLength + 1;
+            index += labelLength + 1;
+        }
+        return length + 1; // Add 1 for the null byte
+    }
+
     public DNSheader extractHeader() {
         short identifier = (short) ((data[0] << 8) | (data[1] & 0xFF));
         short flags = (short) ((data[2] << 8) | (data[3] & 0xFF));
@@ -65,7 +120,7 @@ public class DNSMessageParser {
                      .setAnswerCount(answerCount)
                      .setAuthorityCount(authorityCount)
                      .setAdditionalCount(additionalCount);
-        
+
         return headerBuilder.build();
     }
 }

@@ -1,5 +1,8 @@
 package Sinkhole;
 
+import java.net.DatagramPacket;
+import java.nio.ByteBuffer;
+
 public class DNSheader{
     //DNS header fields
     private final short identifier;
@@ -19,6 +22,8 @@ public class DNSheader{
         this.authorityCount = authorityCount;
         this.additionalCount = additionalCount;
     }
+
+   
 
     public static class Builder {
         private short identifier;
