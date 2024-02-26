@@ -17,8 +17,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Scanner;
-
-
+import java.io.*;
 
 import merrimackutil.json.JsonIO;
 import merrimackutil.json.types.JSONArray;
@@ -149,10 +148,12 @@ public class SinkholeServer {
 
                 if (blockList.isBlocked(domain,getQueryTypeFromPacket(packet))) {
                     // If domain is in blocklist, respond with the sinkhole address
-                    byte[] response = ("Sinkholed: " + domain).getBytes();
-                    DatagramPacket responsePacket = new DatagramPacket(response, response.length, packet.getAddress(), packet.getPort());
-                    socket.send(responsePacket);
-                    System.out.println("Blocked Domain: " + domain);
+                    // byte[] response = ("Sinkholed: " + domain).getBytes();
+                    // DatagramPacket responsePacket = new DatagramPacket(response, response.length, packet.getAddress(), packet.getPort());
+                    // socket.send(responsePacket);
+                    // System.out.println("Blocked Domain: " + domain);
+                    forwardBlockedDueToBlocklist(packet,socket,domain);
+
                 } else {
 
                     System.out.println("Forwarding:"+domain);
@@ -169,6 +170,126 @@ public class SinkholeServer {
             e.printStackTrace();
         }
     }
+    private void forwardBlockedDueToBlocklist(DatagramPacket packet, DatagramSocket socket,String domain) {
+        try {
+            // Construct a DNS response indicating that the domain is blocked due to the blocklist
+            DNSheader responseHeader = new DNSheader.Builder()
+                    .setIdentifier(getIdentifierFromPacket(packet.getData()))
+                    .setFlags((short) 0x8180) // Response with recursion desired and Response code: No error
+                    .setQuestionCount((short) 1) // Single question in the query
+                    .setAnswerCount((short) 0) // No answers in the response
+                    .setAuthorityCount((short) 0)
+                    .setAdditionalCount((short) 0)
+                    .build();
+    
+            // Construct the blocked response
+            byte[] blockedResponse = constructBlockedDNSResponse(packet.getData(),domain, getQueryTypeFromPacket(packet));
+    
+            // Combine the header and send the response packet
+            byte[] responseBytes = responseHeader.getBytes();
+            DatagramPacket responsePacket = new DatagramPacket(blockedResponse, blockedResponse.length, packet.getAddress(), packet.getPort());
+            socket.send(responsePacket);
+            System.out.println("Forwarded DNS response indicating domain is blocked due to blocklist.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
+
+    private byte[] constructBlockedDNSResponse(byte[] requestData, String domain, String queryType) throws IOException {
+        short identifier = ByteBuffer.wrap(requestData, 0, 2).getShort();
+            DNSheader responseHeader = new DNSheader.Builder()
+                .setIdentifier(identifier)
+                .setFlags((short) 0x8180) // repsonse with recursion desired and Response code: No error
+                .setQuestionCount((short) 1) // single question in the query
+                .setAnswerCount((short) 2) // Two answers in the response (for IPv4 and IPv6)
+                .setAuthorityCount((short) 0)
+                .setAdditionalCount((short) 0)
+                .build();
+    
+        byte[] domainBytes = domainToBytes(domain);
+        byte[] questionSection = constructQuestionSection(domainBytes, queryType);
+        byte[] answerSection = constructAnswerSection(domainBytes);
+        byte[] responseBytes = new byte[DNSheader.HEADER_LENGTH + questionSection.length + answerSection.length];
+        ByteBuffer responseBuffer = ByteBuffer.wrap(responseBytes);
+        responseBuffer.put(responseHeader.getBytes());
+        responseBuffer.put(questionSection);
+        responseBuffer.put(answerSection);
+    
+        return responseBytes;
+    }
+    
+    //  method to construct the answer section with the dummy IP address of 0.0.0.0
+    private byte[] constructAnswerSection(byte[] domainBytes) throws IOException {
+        byte[] ipv4Address = {0, 0, 0, 0}; // IPv4 address: 0.0.0.0
+        byte[] ipv6Address = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // IPv6 address: ::
+    
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    
+        // consitrcut the first answer for IPv4 address
+        outputStream.write(domainBytes); 
+        outputStream.write(new byte[]{0, 1}); // ttype
+        outputStream.write(new byte[]{0, 1}); // Class: IN (Internet)
+        outputStream.write(new byte[]{0, 0, 0, 0}); // tll of 0 
+        outputStream.write(new byte[]{0, 4}); //  4 bytes for ipv4
+        outputStream.write(ipv4Address); // A address bytes
+    
+        // construct the second answer for ipv6 address,should come as :: for this null return
+        outputStream.write(domainBytes);
+        outputStream.write(new byte[]{0, 28}); // type: aaaa
+        outputStream.write(new byte[]{0, 1}); // class
+        outputStream.write(new byte[]{0, 0, 0, 0}); // tll 0 seconds
+        outputStream.write(new byte[]{0, 16}); // data length: 16 bytes for v 6
+        outputStream.write(ipv6Address); //  address bytes for ipv6
+    
+        return outputStream.toByteArray();
+    }
+    
+
+private byte[] domainToBytes(String domain) throws IOException {
+    String[] labels = domain.split("\\."); // spltting domain into individual labels
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+    for (String label : labels) {
+        byte[] labelBytes = label.getBytes(StandardCharsets.US_ASCII); 
+        outputStream.write((byte) labelBytes.length); // write label length
+        outputStream.write(labelBytes); // write label 
+    }
+
+    outputStream.write((byte) 0); //  zero byte for end of domain name
+    return outputStream.toByteArray();
+}
+
+
+    
+    private short getIdentifierFromPacket(byte[] data) {
+        //  get the id from the frist two bytes of the packet
+        return ByteBuffer.wrap(data, 0, 2).getShort();
+    }
+    
+    private byte[] constructQuestionSection(byte[] domainBytes, String queryType) {
+        byte[] questionSection = new byte[domainBytes.length + 4]; // 4 bytes for type and class
+    
+        // make copy of  domain bytes
+        System.arraycopy(domainBytes, 0, questionSection, 0, domainBytes.length);
+    
+        //conditions for qytype
+        short qType;
+        if (queryType.equalsIgnoreCase("A")) {
+            qType = 0x0001; 
+        } else if (queryType.equalsIgnoreCase("AAAA")) {
+            qType = 0x001c;
+        } else {
+            throw new IllegalArgumentException("Unsupported query type: " + queryType);
+        }
+        ByteBuffer.wrap(questionSection, domainBytes.length, 2).putShort(qType);
+            short qClass = 0x0001; 
+        ByteBuffer.wrap(questionSection, domainBytes.length + 2, 2).putShort(qClass);
+    
+        return questionSection;
+    }
+    
 
 
     private void forwardQueryToDNS(String domain, DatagramPacket packet, DatagramSocket socket, DNSheader dnsHeader,String queryType) {

@@ -24,6 +24,17 @@ public class DNSheader{
     }
 
    
+    public byte[] getBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(HEADER_LENGTH);
+        buffer.putShort(identifier);
+        buffer.putShort(flags);
+        buffer.putShort(questionCount);
+        buffer.putShort(answerCount);
+        buffer.putShort(authorityCount);
+        buffer.putShort(additionalCount);
+        return buffer.array();
+    }
+
 
     public static class Builder {
         private short identifier;
