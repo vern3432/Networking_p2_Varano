@@ -14,6 +14,10 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.Scanner;
+
 
 
 import merrimackutil.json.JsonIO;
@@ -96,8 +100,34 @@ public class SinkholeServer {
                 .setAdditionalCount(additionalCount)
                 .build();
     }
-    
+    private void loadUI() {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Enter your command:");
+            String command = scanner.nextLine();
+            switch (command.toLowerCase()) {
+                case "--config":
+                case "-c":
+                    System.out.println("Config file: <config>");
+                    // Handle loading configuration file
+                    break;
+                case "--help":
+                case "-h":
+                    System.out.println("Display the help.");
+                    // Display help information
+                    break;
+                case "exit":
+                    System.out.println("Exiting...");
+                    System.exit(0);
+                    break;
+                default:
+                    System.out.println("Invalid command. Please try again.");
+            }
+        }
+    }
     public void startServer() {
+        ExecutorService executor = Executors.newFixedThreadPool(10); // Arbitrary pool limit of 10 threads
+
         try {
             DatagramSocket socket = new DatagramSocket(port);
             byte[] buffer = new byte[1024];
@@ -108,13 +138,15 @@ public class SinkholeServer {
                 DNSMessageParser messageParser = new DNSMessageParser(packet.getData());
                 String hostname = messageParser.extractHostname();
                 DNSheader header = messageParser.extractHeader();
-                System.out.println("hostname"+hostname);
-                System.out.println("header"+header);
+                // System.out.println("hostname"+hostname);
+                // System.out.println("header"+header);
                 System.out.println(messageParser.extractQueryType());
                 DNSheader dnsHeader = createDNSHeaderFromPacket(packet);
                     String query = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.US_ASCII);
                 String domain = extractDomainFromQuery(packet);
                 String[] parts = query.split("\\s+"); // Split by whitespace
+                // loadUI();
+
                 if (blockList.isBlocked(domain,getQueryTypeFromPacket(packet))) {
                     // If domain is in blocklist, respond with the sinkhole address
                     byte[] response = ("Sinkholed: " + domain).getBytes();
@@ -231,7 +263,6 @@ private byte[] constructQuestionSection(String domain, String queryType) {
 
 
         
-    
 
     private void processAndPrintDNSQuery(DatagramPacket packet) {
         byte[] data = packet.getData();
@@ -242,6 +273,9 @@ private byte[] constructQuestionSection(String domain, String queryType) {
     }
 
     public static void main(String[] args) {
+
+        
+        
         try {
             JSONObject configJsonObject = JsonIO.readObject(new File("src/Sinkhole/config.json"));
             String dnsAddress = configJsonObject.get("dns-address").toString();

@@ -35,8 +35,8 @@ public class BlocklistChecker {
 
             String domain=temp.getHost();
             String type=temp.getType();
-            System.out.println("host:"+ domain );
-            System.out.println("type:"+ type );
+            // System.out.println("host:"+ domain );
+            // System.out.println("type:"+ type );
             if(blocklist.containsKey(domain)){
                 blocklist.get(domain).add(type);
             }
