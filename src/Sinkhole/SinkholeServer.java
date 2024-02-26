@@ -124,7 +124,8 @@ public class SinkholeServer {
                 } else {
 
                     System.out.println("Forwarding:"+domain);
-                    forwardQueryToDNS(domain, packet, socket,dnsHeader);
+                    System.out.println("True Type"+getQueryTypeFromPacket(packet));
+                    forwardQueryToDNS(domain, packet, socket,dnsHeader,getQueryTypeFromPacket(packet));
 
 
 
@@ -138,11 +139,11 @@ public class SinkholeServer {
     }
 
 
-    private void forwardQueryToDNS(String domain, DatagramPacket packet, DatagramSocket socket, DNSheader dnsHeader) {
+    private void forwardQueryToDNS(String domain, DatagramPacket packet, DatagramSocket socket, DNSheader dnsHeader,String queryType) {
         try {
             InetAddress dnsServerAddress = InetAddress.getByName(dnsAddress);
     
-            byte[] queryMessage = constructDNSQuery(domain, dnsHeader);
+            byte[] queryMessage = constructDNSQuery(domain, dnsHeader,queryType);
     
             DatagramPacket sendPacket = new DatagramPacket(queryMessage, queryMessage.length, dnsServerAddress, 53);
     
@@ -159,10 +160,23 @@ public class SinkholeServer {
             e.printStackTrace();
         }
     }
+       
+    private String getQueryTypeFromPacket(DatagramPacket packet) {
+        byte[] data = packet.getData();
+        int length = packet.getLength();
+        int index = length - 4; 
     
+        short type = (short) ((data[index] << 8) | (data[index + 1] & 0xFF));
+    
+        if (type == 0x001C) {
+            return "AAAA"; // IPv6 query type
+        } else {
+            return "A"; // IPv4 query type (assuming default)
+        }
+    }
     
 
-private byte[] constructDNSQuery(String domain, DNSheader dnsHeader) {
+private byte[] constructDNSQuery(String domain, DNSheader dnsHeader,String queryType) {
     ByteBuffer headerBuffer = ByteBuffer.allocate(DNSheader.HEADER_LENGTH);
     headerBuffer.putShort(dnsHeader.getIdentifier());
     headerBuffer.putShort(dnsHeader.getFlags());
@@ -171,7 +185,7 @@ private byte[] constructDNSQuery(String domain, DNSheader dnsHeader) {
     headerBuffer.putShort(dnsHeader.getAuthorityCount());
     headerBuffer.putShort(dnsHeader.getAdditionalCount());
     byte[] headerBytes = headerBuffer.array();
-    byte[] questionSection = constructQuestionSection(domain);
+    byte[] questionSection = constructQuestionSection(domain,queryType);
     byte[] dnsQuery = new byte[headerBytes.length + questionSection.length];
     System.arraycopy(headerBytes, 0, dnsQuery, 0, headerBytes.length);
     System.arraycopy(questionSection, 0, dnsQuery, headerBytes.length, questionSection.length);
@@ -181,18 +195,14 @@ private byte[] constructDNSQuery(String domain, DNSheader dnsHeader) {
 
     
     
-    
-private byte[] constructQuestionSection(String domain) {
-    String queryType = domain.contains(":") ? "AAAA" : "A";
-
+private byte[] constructQuestionSection(String domain, String queryType) {
     String[] labels = domain.split("\\.");
 
     int totalLength = 0;
     for (String label : labels) {
-        totalLength += label.length() + 1; // Include the length byte
+        totalLength += label.length() + 1; 
     }
-    totalLength++; // Add 1 byte for the termination byte (0x00)
-
+    totalLength++;
     ByteBuffer buffer = ByteBuffer.allocate(totalLength + 4); // 4 bytes for type and class
 
     for (String label : labels) {
@@ -202,16 +212,15 @@ private byte[] constructQuestionSection(String domain) {
 
     buffer.put((byte) 0x00);
 
+    short qType;
     if (queryType.equalsIgnoreCase("A")) {
-        System.out.println("A");
-
-        buffer.putShort((short) 0x0001); // QTYPE for A record
+        qType = 0x0001; // QTYPE for A record
     } else if (queryType.equalsIgnoreCase("AAAA")) {
-        System.out.println("AAAA");
-        buffer.putShort((short) 0x001c); // QTYPE for AAAA record
+        qType = 0x001c; // QTYPE for AAAA record
     } else {
         throw new IllegalArgumentException("Unsupported query type: " + queryType);
     }
+    buffer.putShort(qType); // Set QTYPE
 
     buffer.putShort((short) 0x0001); // QCLASS for IN class
 
@@ -219,6 +228,7 @@ private byte[] constructQuestionSection(String domain) {
 
     return questionSection;
 }
+
 
         
     
