@@ -67,13 +67,14 @@ public class SinkholeServer {
 
     public void startServer() {
         try {
-            DatagramSocket socket = new DatagramSocket(port);
-            byte[] buffer = new byte[1024];
+            try (DatagramSocket socket = new DatagramSocket(port)) {
+                byte[] buffer = new byte[1024];
 
-            while (true) {
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
-                processAndPrintDNSQuery(packet);
+                while (true) {
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
+                    processAndPrintDNSQuery(packet);
+                }
             }
         } catch (SocketException e) {
             e.printStackTrace();
