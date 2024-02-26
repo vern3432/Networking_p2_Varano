@@ -99,8 +99,8 @@ public class SinkholeServer {
     
     public void startServer() {
         try {
-            try (DatagramSocket socket = new DatagramSocket(port)) {
-                byte[] buffer = new byte[1024];
+            DatagramSocket socket = new DatagramSocket(port);
+            byte[] buffer = new byte[1024];
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -129,7 +129,6 @@ public class SinkholeServer {
 
 
                             }
-
             }
         } catch (SocketException e) {
             e.printStackTrace();
