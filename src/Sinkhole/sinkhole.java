@@ -74,16 +74,17 @@ public class sinkhole {
     try {
       double temp = Double.parseDouble(sinkhole_port);
       int port = (int) temp;
-      DatagramSocket socket = new DatagramSocket(port);
-      byte[] buffer = new byte[1024];
+      try (DatagramSocket socket = new DatagramSocket(port)) {
+        byte[] buffer = new byte[1024];
 
-      while (true) {
-          // recive incoming DNS query packet
-          DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-          socket.receive(packet);
+        while (true) {
+            // recive incoming DNS query packet
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
 
-          // proccess and print out the received DNS query
-          processAndPrintDNSQuery(packet);
+            // proccess and print out the received DNS query
+            processAndPrintDNSQuery(packet);
+        }
       }
   } catch (Exception e) {
       e.printStackTrace();
