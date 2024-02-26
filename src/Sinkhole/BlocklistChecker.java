@@ -5,11 +5,16 @@ import java.util.HashMap;
 public class BlocklistChecker {
     private HashMap<String, Boolean> blocklist;
 
-    public BlocklistChecker(ArrayList<String> blockedDomains) {
-        this.blocklist = new HashMap<>();
-        for (String domain : blockedDomains) {
-            blocklist.put(domain, true);
+    public BlocklistChecker(ArrayList<BlockObject> blockedDomains) {
+        for(int i=0;i<blockedDomains.size();i++){
+            BlockObject temp=blockedDomains.get(i);
+            System.out.println("host:"+ temp.getHost() );
+            System.out.println("type:"+ temp.getType() );
+
+
         }
+        this.blocklist = new HashMap<>();
+
     }
 
     public boolean isBlocked(String domain) {

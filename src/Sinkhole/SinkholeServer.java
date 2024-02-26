@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.Double;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -48,8 +49,19 @@ public class SinkholeServer {
         this.port = port;
         this.blockFilePath = blockFilePath;
         JSONObject BlockListObject = JsonIO.readObject(new File(blockFilePath));
-        System.out.println(BlockListObject.toString());
-        this.blockList=new BlocklistChecker(null); 
+         JSONArray recordArray= BlockListObject.getArray("records");
+         ArrayList<BlockObject> forBlockList=new ArrayList<BlockObject>();
+
+         for(int i=0;i<recordArray.size();i++){
+            // System.out.println("class"+recordArray.get(i).getClass());
+            JSONObject temp=(JSONObject)recordArray.get(i);
+            String host=temp.getString("host");
+            String type=temp.getString("type");
+
+            forBlockList.add(new BlockObject(type,host));
+         }
+
+        this.blockList=new BlocklistChecker(forBlockList); 
     
     }
 
