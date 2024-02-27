@@ -152,7 +152,7 @@ public class SinkholeTextUi {
         do {
             System.out.println("Enter the website URL:");
             String websiteUrl = scanner.nextLine();
-
+            
             if (isValidUrl(websiteUrl)) {
                 System.out.println("Website URL " + websiteUrl + " is valid.");
                 System.out.println("Enter the type (a or aaaa):");
