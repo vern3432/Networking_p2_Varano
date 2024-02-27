@@ -31,15 +31,34 @@ import java.nio.file.Paths;
 
 public class SinkholeServer {
 
-    private final int port;
-    private final String blockFilePath;
-    private final String dnsAddress;
+    private int port;
+    private String blockFilePath;
+    private String dnsAddress;
     private BlocklistChecker blockList;
+    public String config = "";
 
-    public SinkholeServer(int port, String blockFilePath, String dnsAddress) throws FileNotFoundException {
+    public SinkholeServer() throws FileNotFoundException {
+        System.out.println(config);
+
+        if (config == "") {
+            config = "src/Sinkhole/config.json";
+
+        }
+
+        System.out.println(config);
+
+        JSONObject configJsonObject = JsonIO.readObject(new File(config));
+        String dnsAddress = configJsonObject.get("dns-address").toString();
+        String sinkholePort = configJsonObject.get("sinkhole-port").toString();
+        String blockFilePath = "src/Sinkhole/" + configJsonObject.get("block-file").toString();
+        double temp1 = Double.parseDouble(sinkholePort);
+        int port = (int) temp1;
+
         this.dnsAddress = dnsAddress;
         this.port = port;
         this.blockFilePath = blockFilePath;
+        System.out.println(port);
+
         JSONObject BlockListObject = JsonIO.readObject(new File(blockFilePath));
         JSONArray recordArray = BlockListObject.getArray("records");
         ArrayList<BlockObject> forBlockList = new ArrayList<BlockObject>();
@@ -53,12 +72,9 @@ public class SinkholeServer {
 
         this.blockList = new BlocklistChecker(forBlockList);
 
-
     }
 
-
-
-    public  void clearJsonAndWriteString(String filePath, String newContent) {
+    public void clearJsonAndWriteString(String filePath, String newContent) {
         // Read the JSON file as text
         String jsonContent = "";
         try {
@@ -87,12 +103,6 @@ public class SinkholeServer {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
 
     private String extractDomainFromQuery(DatagramPacket packet) {
         byte[] data = packet.getData();
@@ -124,13 +134,13 @@ public class SinkholeServer {
     }
 
     public BlockObject addBlockSite(String domain, String type) {
-        BlockObject forReturn=new BlockObject(type, domain);
+        BlockObject forReturn = new BlockObject(type, domain);
         this.blockList.addBlockSite(forReturn);
         return forReturn;
 
     }
 
-    public void addBlockSitetoJson(BlockObject forJson) throws FileNotFoundException{
+    public void addBlockSitetoJson(BlockObject forJson) throws FileNotFoundException {
 
         JSONObject BlockListObject = JsonIO.readObject(new File(this.blockFilePath));
         JSONObject BlockListSample = JsonIO.readObject(new File("src/Sinkhole/sample.json"));
@@ -139,17 +149,14 @@ public class SinkholeServer {
 
         ArrayList<BlockObject> forBlockList = new ArrayList<BlockObject>();
         JSONObject sample = (JSONObject) BlockListSampleF.get(0);
-        System.out.println("Keyset"+sample.keySet()
-        );
+        System.out.println("Keyset" + sample.keySet());
         sample.put("host", forJson.getHost());
         sample.put("type", forJson.getType());
         recordArray.add(sample);
-        File inputFile=new File(this.blockFilePath);
-        String temp=recordArray.toJSON();
-        BlockListSample.put("records",recordArray);
-        clearJsonAndWriteString(blockFilePath,BlockListSample.toJSON());
-        
-
+        File inputFile = new File(this.blockFilePath);
+        String temp = recordArray.toJSON();
+        BlockListSample.put("records", recordArray);
+        clearJsonAndWriteString(blockFilePath, BlockListSample.toJSON());
 
     }
 
@@ -199,8 +206,41 @@ public class SinkholeServer {
         }
     }
 
-    public void startServer() {
+    public void startServer() throws FileNotFoundException {
         ExecutorService executor = Executors.newFixedThreadPool(10); // Arbitrary pool limit of 10 threads
+        System.out.println(config);
+
+        if (config == "") {
+            config = "src/Sinkhole/config.json";
+
+        }
+
+        System.out.println(config);
+
+        JSONObject configJsonObject = JsonIO.readObject(new File(config));
+        String dnsAddress = configJsonObject.get("dns-address").toString();
+        String sinkholePort = configJsonObject.get("sinkhole-port").toString();
+        String blockFilePath = "src/Sinkhole/" + configJsonObject.get("block-file").toString();
+        double temp1 = Double.parseDouble(sinkholePort);
+        int port = (int) temp1;
+
+        this.dnsAddress = dnsAddress;
+        this.port = port;
+        this.blockFilePath = blockFilePath;
+        System.out.println(port);
+
+        JSONObject BlockListObject = JsonIO.readObject(new File(blockFilePath));
+        JSONArray recordArray = BlockListObject.getArray("records");
+        ArrayList<BlockObject> forBlockList = new ArrayList<BlockObject>();
+        for (int i = 0; i < recordArray.size(); i++) {
+            // System.out.println("class"+recordArray.get(i).getClass());
+            JSONObject temp = (JSONObject) recordArray.get(i);
+            String host = temp.getString("host");
+            String type = temp.getString("type");
+            forBlockList.add(new BlockObject(type, host));
+        }
+
+        this.blockList = new BlocklistChecker(forBlockList);
 
         try {
             DatagramSocket socket = new DatagramSocket(port);
@@ -461,16 +501,24 @@ public class SinkholeServer {
         System.out.println(receivedData);
     }
 
+    public void setconfig(String input) {
+
+        this.config = input;
+
+    }
+
     public static void main(String[] args) {
 
         try {
-            JSONObject configJsonObject = JsonIO.readObject(new File("src/Sinkhole/config.json"));
-            String dnsAddress = configJsonObject.get("dns-address").toString();
-            String sinkholePort = configJsonObject.get("sinkhole-port").toString();
-            String blockFilePath = "src/Sinkhole/" + configJsonObject.get("block-file").toString();
-            double temp = Double.parseDouble(sinkholePort);
-            int port = (int) temp;
-            SinkholeServer server = new SinkholeServer(port, blockFilePath, dnsAddress);
+            // JSONObject configJsonObject = JsonIO.readObject(new File(config));
+            // String dnsAddress = configJsonObject.get("dns-address").toString();
+            // String sinkholePort = configJsonObject.get("sinkhole-port").toString();
+            // String blockFilePath = "src/Sinkhole/" +
+            // configJsonObject.get("block-file").toString();
+            // double temp = Double.parseDouble(sinkholePort);
+            // int port = (int) temp;
+            // port, blockFilePath, dnsAddress
+            SinkholeServer server = new SinkholeServer();
             SinkholeTextUi.generateUI(server);
 
             // server.startServer();

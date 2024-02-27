@@ -105,8 +105,11 @@ public class SinkholeTextUi {
         fileChooser.setFileFilter(filter);
 
         int returnValue = fileChooser.showOpenDialog(null);
+
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
+            server.setconfig(selectedFile.getPath());
+
             System.out.println("Selected file: " + selectedFile.getAbsolutePath());
             // Add logic to handle the selected file
         }
