@@ -1,0 +1,5 @@
+{
+    "dns-address":"8.8.8.8",
+    "sinkhole-port":5300,
+    "block-file":"block.json"
+}

@@ -1,0 +1,22 @@
+Non-authoritative answer:
+Name:	youtube.com
+Address: 142.251.35.174
+
+linxuser3@linxuser3-ThinkPad-X390:~$ nslookup -port=5000 -query=A youtube.com 127.0.0.1
+Server:		127.0.0.1
+Address:	127.0.0.1#5000
+
+Non-authoritative answer:
+Name:	youtube.com
+Address: 142.251.35.174
+
+linxuser3@linxuser3-ThinkPad-X390:~$ nslookup -port=5000 -query=A merrimack.edu 127.0.0.1
+Server:		127.0.0.1
+Address:	127.0.0.1#5000
+
+Non-authoritative answer:
+Name:	merrimack.edu
+Address: 23.185.0.3
+
+linxuser3@linxuser3-ThinkPad-X390:~$ ^C
+linxuser3@linxuser3-ThinkPad-X390:~$ 
