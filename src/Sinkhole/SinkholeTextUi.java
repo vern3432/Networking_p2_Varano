@@ -1,4 +1,6 @@
-package Sinkhole;import java.util.Scanner;
+package Sinkhole;
+
+import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.InetAddress;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 public class SinkholeTextUi {
 
     private static final Scanner scanner = new Scanner(System.in);
@@ -115,17 +118,18 @@ public class SinkholeTextUi {
         }
     }
 
-    public static void choosePort(SinkholeServer server) {
+    public static void choosePort(SinkholeServer server) throws FileNotFoundException {
         System.out.println("Enter the port number:");
 
         int port = readIntInput();
 
         if (port >= 0 && port <= 65535) {
             System.out.println("Port " + port + " is valid.");
-            // Add logic to handle the port
+            server.addPorttoJson(port);
+
         } else {
             System.out.println("Invalid port number. Port number must be between 0 and 65535.");
-            choosePort(server); // Call the method again in case of invalid input
+            choosePort(server);
         }
     }
 
@@ -139,17 +143,16 @@ public class SinkholeTextUi {
             // Add logic to handle the DNS address
         } catch (UnknownHostException e) {
             System.out.println("Invalid DNS address.");
-            changeDNSAddress(server); // Call the method again in case of invalid input
+            changeDNSAddress(server);
         }
     }
 
- 
     public static void addBlockSite(SinkholeServer server) throws FileNotFoundException {
         boolean validUrl = false;
         do {
             System.out.println("Enter the website URL:");
             String websiteUrl = scanner.nextLine();
-    
+
             if (isValidUrl(websiteUrl)) {
                 System.out.println("Website URL " + websiteUrl + " is valid.");
                 System.out.println("Enter the type (a or aaaa):");
@@ -157,18 +160,19 @@ public class SinkholeTextUi {
                 if ("a".equalsIgnoreCase(type) || "aaaa".equalsIgnoreCase(type)) {
                     System.out.println("Type " + type + " is valid.");
                     validUrl = true;
-                    BlockObject forJson=server.addBlockSite(websiteUrl, type);
+                    BlockObject forJson = server.addBlockSite(websiteUrl, type);
                     server.addBlockSitetoJson(forJson);
-                    
+
                 } else {
                     System.out.println("Invalid type. Type must be 'a' or 'aaaa'.");
                 }
             } else {
                 System.out.println("Invalid website URL. Please try again.");
-                scanner.nextLine(); // Consume the newline character in the buffer
+                scanner.nextLine();
             }
         } while (!validUrl);
     }
+
     public static boolean isValidUrl(String url) {
         // Regular expression for validating domain names
         String regex = "^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$";

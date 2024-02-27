@@ -160,6 +160,22 @@ public class SinkholeServer {
 
     }
 
+
+    public String getConfig(){
+        return this.config;
+
+    }
+
+    public void addPorttoJson(int forJson) throws FileNotFoundException {
+        System.out.println("pinter is problemaddPorttoJson");
+        System.out.println( "Config path:"+getConfig());
+        JSONObject BlockListObject = JsonIO.readObject(new File(getConfig()));
+        BlockListObject.put("sinkhole-port", forJson);
+        clearJsonAndWriteString(this.config, BlockListObject.toJSON());
+
+
+    }
+
     public DNSheader createDNSHeaderFromPacket(DatagramPacket packet) {
         byte[] data = packet.getData();
 
