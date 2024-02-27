@@ -35,7 +35,7 @@ Option Information:
 
 
 
-Sample lookups: 
+# Sample lookups: 
 
 
 google type a: nslookup -port=5000 google.com 127.0.0.1
