@@ -1,0 +1,17 @@
+{
+    "records": [
+        {
+            "host":"google.com",
+            "type":"A"
+        },
+
+        {
+            "host":"google.com",
+            "type":"AAAA"
+        },
+        {
+            "host":"youtube.com",
+            "type":"AAAA"
+        }
+    ]
+}

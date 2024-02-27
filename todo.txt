@@ -1,0 +1,16 @@
+• All JSON objects should have a corresponding Java class that implements the
+JSONSerializable interface.
+
+I mean this is already kind of done 
+
+Maybe do one for config file 
+
+Text based Ui:
+
+$ java -jar dist/sinkhole.jar -h
+usage:
+sinkhole --config <config>
+sinkhole --help
+options:
+-c, --config Config file to use.
+-h, --help Display the help.

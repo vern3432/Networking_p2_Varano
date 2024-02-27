@@ -22,6 +22,25 @@ public class DNSheader{
         this.authorityCount = authorityCount;
         this.additionalCount = additionalCount;
     }
+    public  DNSheader createDNSHeaderFromPacket(DatagramPacket packet) {
+        byte[] data = packet.getData();
+
+        short identifier = ByteBuffer.wrap(data, 0, 2).getShort();
+        short flags = ByteBuffer.wrap(data, 2, 2).getShort();
+        short questionCount = ByteBuffer.wrap(data, 4, 2).getShort();
+        short answerCount = ByteBuffer.wrap(data, 6, 2).getShort();
+        short authorityCount = ByteBuffer.wrap(data, 8, 2).getShort();
+        short additionalCount = ByteBuffer.wrap(data, 10, 2).getShort();
+
+        return new DNSheader.Builder()
+                .setIdentifier(identifier)
+                .setFlags(flags)
+                .setQuestionCount(questionCount)
+                .setAnswerCount(answerCount)
+                .setAuthorityCount(authorityCount)
+                .setAdditionalCount(additionalCount)
+                .build();
+    }
 
    
     public byte[] getBytes() {
