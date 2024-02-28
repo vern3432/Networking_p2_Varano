@@ -71,6 +71,7 @@ public class SinkholeServer {
         }
 
         this.blockList = new BlocklistChecker(forBlockList);
+        System.out.println( this.blockList);
 
     }
 
@@ -277,7 +278,9 @@ public class SinkholeServer {
                 String[] parts = query.split("\\s+"); // Split by whitespace
                 // loadUI();
 
-                if (blockList.isBlocked(domain, getQueryTypeFromPacket(packet))) {
+                if (blockList.isBlocked(domain.toLowerCase(), getQueryTypeFromPacket(packet).toLowerCase())) {
+                    System.out.println(this.blockList.blocklist);
+
                     // If domain is in blocklist, respond with the sinkhole address
                     // byte[] response = ("Sinkholed: " + domain).getBytes();
                     // DatagramPacket responsePacket = new DatagramPacket(response, response.length,
@@ -287,7 +290,7 @@ public class SinkholeServer {
                     forwardBlockedDueToBlocklist(packet, socket, domain);
 
                 } else {
-
+                    System.out.println(this.blockList.blocklist);
                     System.out.println("Forwarding:" + domain);
                     System.out.println("True Type" + getQueryTypeFromPacket(packet));
                     forwardQueryToDNS(domain, packet, socket, dnsHeader, getQueryTypeFromPacket(packet));

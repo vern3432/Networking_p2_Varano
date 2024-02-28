@@ -4,18 +4,10 @@ import java.util.HashMap;
 
 public class BlocklistChecker {
 
-    public boolean isBlocked(String domain) {
-        //this needs update
-        if(blocklist.containsKey(domain)){
-            return true;
 
-        }
-
-        return false;
-    }
     
     @SuppressWarnings("rawtypes")
-    private HashMap<String, ArrayList> blocklist;
+    public HashMap<String, ArrayList> blocklist;
 
     @SuppressWarnings("unchecked")
     public BlocklistChecker(ArrayList<BlockObject> blockedDomains) {
@@ -29,7 +21,7 @@ public class BlocklistChecker {
             // System.out.println("host:"+ domain );
             // System.out.println("type:"+ type );
             if(blocklist.containsKey(domain)){
-                this.blocklist.get(domain).add(type);
+                this.blocklist.get(domain.trim()).add(type.trim());
             }
             else{
                 ArrayList<String> tempList =new ArrayList<>();
@@ -64,6 +56,10 @@ public class BlocklistChecker {
     public boolean isBlocked(String domain,String type) {
         //this needs update
         if(blocklist.containsKey(domain.toLowerCase())&&blocklist.get(domain).contains(type.toLowerCase())){
+            return true;
+
+        }
+        if (blocklist.containsKey(domain.toLowerCase())&&blocklist.get(domain).contains(type.toUpperCase())){
             return true;
 
         }

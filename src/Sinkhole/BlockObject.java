@@ -9,7 +9,7 @@ public class BlockObject {
     }
 
     public void setType(String type) {
-        this.type = type;
+        this.type = type.toLowerCase().trim();
     }
 
     public String getHost() {
@@ -17,7 +17,7 @@ public class BlockObject {
     }
 
     public void setHost(String host) {
-        this.host = host;
+        this.host = host.toLowerCase().trim();
     }
 
     public BlockObject(String type, String host) {
