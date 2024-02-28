@@ -67,7 +67,7 @@ public class SinkholeServer {
             JSONObject temp = (JSONObject) recordArray.get(i);
             String host = temp.getString("host");
             String type = temp.getString("type");
-            forBlockList.add(new BlockObject(type, host));
+            forBlockList.add(new BlockObject(type.toLowerCase(), host.toLowerCase()));
         }
 
         this.blockList = new BlocklistChecker(forBlockList);
@@ -254,7 +254,7 @@ public class SinkholeServer {
             JSONObject temp = (JSONObject) recordArray.get(i);
             String host = temp.getString("host");
             String type = temp.getString("type");
-            forBlockList.add(new BlockObject(type, host));
+            forBlockList.add(new BlockObject(type.toLowerCase(), host.toLowerCase()));
         }
 
         this.blockList = new BlocklistChecker(forBlockList);
