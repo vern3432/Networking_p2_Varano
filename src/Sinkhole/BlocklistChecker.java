@@ -7,7 +7,7 @@ public class BlocklistChecker {
 
     
     @SuppressWarnings("rawtypes")
-    public HashMap<String, ArrayList> blocklist;
+    private HashMap<String, ArrayList> blocklist;
 
     @SuppressWarnings("unchecked")
     public BlocklistChecker(ArrayList<BlockObject> blockedDomains) {
